@@ -1,0 +1,29 @@
+{
+  "name": "osint-app",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js"
+  },
+  "keywords": ["osint", "intelligence", "username-search", "domain-lookup", "breach-checker"],
+  "author": "",
+  "license": "ISC",
+  "description": "A user-friendly OSINT platform for discovering usernames, domain lookups, and email breach checking.",
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
+    "axios": "^1.17.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "sqlite3": "^6.0.1",
+    "vite": "^8.0.16"
+  }
+}

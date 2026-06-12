@@ -1,0 +1,132 @@
+.info-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.info-section:last-child {
+  border-bottom: none;
+}
+
+.info-section h4 {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.info-item {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.info-item .label {
+  display: block;
+  font-size: 0.85rem;
+  color: #999;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.info-item .value {
+  display: block;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.dns-records {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.dns-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.dns-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.dns-type {
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dns-values {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dns-values code {
+  background: white;
+  border: 1px solid #e0e0e0;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #333;
+  word-break: break-all;
+}
+
+.whois-info {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.whois-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.whois-item:last-child {
+  border-bottom: none;
+}
+
+.whois-item .label {
+  font-weight: 600;
+  color: #666;
+}
+
+.whois-item .value {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .whois-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

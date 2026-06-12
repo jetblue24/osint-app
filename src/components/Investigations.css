@@ -1,0 +1,129 @@
+.investigations-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.investigations-header h2 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.investigations-header .description {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.form-card {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.form-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.form-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.form-buttons .btn {
+  flex: 1;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.empty-state p {
+  margin: 8px 0;
+}
+
+.empty-hint {
+  font-size: 0.9rem;
+}
+
+.investigations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.investigation-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.investigation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.investigation-card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  margin-top: 0;
+}
+
+.investigation-card .description {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.investigation-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.investigation-meta .date {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .investigations-container {
+    padding: 16px;
+  }
+
+  .investigations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-buttons {
+    flex-direction: column;
+  }
+
+  .form-buttons .btn {
+    width: 100%;
+  }
+}

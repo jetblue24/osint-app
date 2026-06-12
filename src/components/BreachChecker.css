@@ -1,0 +1,129 @@
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.status-banner.breached {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+}
+
+.status-banner.safe {
+  background: #d4edda;
+  border: 2px solid #28a745;
+}
+
+.status-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.status-text h4 {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.status-text p {
+  color: #666;
+  margin: 0;
+}
+
+.breaches-section {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.breaches-section h4 {
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.breaches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.breach-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-left: 4px solid #ff6b6b;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.breach-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.breach-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.breach-date {
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.breach-records {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.breach-recommendations {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.breach-recommendations h4 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+  color: #333;
+  font-weight: 600;
+}
+
+.breach-recommendations ul {
+  list-style: none;
+  padding: 0;
+}
+
+.breach-recommendations li {
+  padding: 8px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .status-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .status-icon {
+    font-size: 2rem;
+  }
+
+  .breach-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

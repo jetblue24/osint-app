@@ -1,0 +1,155 @@
+.search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.search-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.description {
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.search-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search-card .input-group input {
+  padding: 14px;
+  font-size: 1rem;
+}
+
+.search-card .btn {
+  padding: 14px;
+  font-size: 1rem;
+}
+
+.results-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.results-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.platform-item {
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.platform-item.found {
+  border-color: #4caf50;
+  background: #f1f8f4;
+}
+
+.platform-item.not-found {
+  border-color: #e0e0e0;
+  background: #fafafa;
+}
+
+.platform-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.platform-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.platform-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.platform-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.platform-link {
+  display: inline-block;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.platform-link:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+.results-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.timestamp {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .search-card,
+  .results-card {
+    padding: 16px;
+  }
+
+  .search-card h2 {
+    font-size: 1.2rem;
+  }
+
+  .results-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .platforms-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .results-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .results-footer .btn {
+    width: 100%;
+  }
+}
