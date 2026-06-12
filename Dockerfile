@@ -1,18 +1,21 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev for build)
+RUN npm install
 
 # Copy application files
 COPY . .
 
 # Build React frontend
 RUN npm run build
+
+# Remove dev dependencies for production
+RUN npm prune --production
 
 # Expose port
 EXPOSE 5000
