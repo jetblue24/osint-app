@@ -251,6 +251,44 @@ app.post('/api/osint/breach-check', authenticateToken, async (req, res) => {
   }
 });
 
+// Phone Number Lookup
+app.post('/api/phone-lookup', authenticateToken, async (req, res) => {
+  const { phoneNumber } = req.body;
+
+  if (!phoneNumber) {
+    return res.status(400).json({ error: 'Phone number is required' });
+  }
+
+  try {
+    const carriers = ['AT&T', 'Verizon', 'T-Mobile', 'Sprint'];
+    const types = ['Mobile', 'Landline', 'VoIP'];
+    const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston'];
+    const timezones = ['Eastern', 'Central', 'Mountain', 'Pacific'];
+
+    const results = {
+      phoneNumber,
+      found: Math.random() > 0.3,
+      carrier: carriers[Math.floor(Math.random() * carriers.length)],
+      type: types[Math.floor(Math.random() * types.length)],
+      country: 'United States',
+      region: 'Example Region',
+      city: cities[Math.floor(Math.random() * cities.length)],
+      timezone: timezones[Math.floor(Math.random() * timezones.length)],
+      registeredTo: 'Private Individual',
+      timestamp: new Date(),
+    };
+
+    db.run(
+      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
+      [req.user.id, 'phone', phoneNumber, JSON.stringify(results)]
+    );
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Phone lookup failed' });
+  }
+});
+
 // Get search history
 app.get('/api/searches', authenticateToken, (req, res) => {
   db.all(

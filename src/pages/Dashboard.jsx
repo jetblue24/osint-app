@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import UsernameSearch from '../components/UsernameSearch';
 import DomainLookup from '../components/DomainLookup';
 import BreachChecker from '../components/BreachChecker';
+import PhoneLookup from '../components/PhoneLookup';
 import SearchHistory from '../components/SearchHistory';
 import Investigations from '../components/Investigations';
 import './Dashboard.css';
@@ -48,6 +49,12 @@ function Dashboard({ user, onLogout }) {
           ⚠️ Breach Check
         </button>
         <button
+          className={`tab ${activeTab === 'phone' ? 'active' : ''}`}
+          onClick={() => setActiveTab('phone')}
+        >
+          📱 Phone Lookup
+        </button>
+        <button
           className={`tab ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
@@ -70,6 +77,9 @@ function Dashboard({ user, onLogout }) {
         )}
         {activeTab === 'breach' && (
           <BreachChecker onSearchComplete={handleSearchComplete} />
+        )}
+        {activeTab === 'phone' && (
+          <PhoneLookup onSearchComplete={handleSearchComplete} />
         )}
         {activeTab === 'history' && <SearchHistory key={refreshKey} />}
         {activeTab === 'investigations' && <Investigations />}
