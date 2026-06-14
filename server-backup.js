@@ -141,9 +141,9 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
-// ==================== OSINT FEATURES - REAL APIs ====================
+// ==================== OSINT FEATURES ====================
 
-// Username Search - Real API
+// Username Search (mock data - replace with real APIs)
 app.post('/api/osint/username-search', authenticateToken, async (req, res) => {
   const { username } = req.body;
 
@@ -152,8 +152,21 @@ app.post('/api/osint/username-search', authenticateToken, async (req, res) => {
   }
 
   try {
-    const results = await searchUsername(username);
+    // Mock results - in production, integrate with real APIs
+    const platforms = [
+      { name: 'Twitter', url: `https://twitter.com/${username}`, found: Math.random() > 0.5 },
+      { name: 'Instagram', url: `https://instagram.com/${username}`, found: Math.random() > 0.5 },
+      { name: 'GitHub', url: `https://github.com/${username}`, found: Math.random() > 0.5 },
+      { name: 'Reddit', url: `https://reddit.com/user/${username}`, found: Math.random() > 0.5 },
+      { name: 'TikTok', url: `https://tiktok.com/@${username}`, found: Math.random() > 0.5 },
+      { name: 'LinkedIn', url: `https://linkedin.com/in/${username}`, found: Math.random() > 0.5 },
+      { name: 'YouTube', url: `https://youtube.com/@${username}`, found: Math.random() > 0.5 },
+      { name: 'Twitch', url: `https://twitch.tv/${username}`, found: Math.random() > 0.5 },
+    ];
 
+    const results = { username, platforms, timestamp: new Date() };
+
+    // Save to search history
     db.run(
       'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
       [req.user.id, 'username', username, JSON.stringify(results)]
@@ -161,25 +174,146 @@ app.post('/api/osint/username-search', authenticateToken, async (req, res) => {
 
     res.json(results);
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Search failed' });
+    res.status(500).json({ error: 'Search failed' });
   }
 });
 
-// Username Variations - Real API
+// Domain/IP Lookup (mock data - replace with real APIs)
+app.post('/api/osint/domain-lookup', authenticateToken, async (req, res) => {
+  const { domain } = req.body;
+
+  if (!domain) {
+    return res.status(400).json({ error: 'Domain is required' });
+  }
+
+  try {
+    // Mock results
+    const results = {
+      domain,
+      ip: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+      country: 'United States',
+      isp: 'Example ISP',
+      dns_records: {
+        A: ['192.168.1.1'],
+        MX: ['mail.example.com'],
+        NS: ['ns1.example.com', 'ns2.example.com'],
+      },
+      whois: {
+        registrar: 'Example Registrar',
+        created: '2020-01-15',
+        expires: '2025-01-15',
+      },
+      timestamp: new Date(),
+    };
+
+    // Save to search history
+    db.run(
+      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
+      [req.user.id, 'domain', domain, JSON.stringify(results)]
+    );
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Lookup failed' });
+  }
+});
+
+// Email Breach Check (mock data - replace with real APIs)
+app.post('/api/osint/breach-check', authenticateToken, async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    // Mock results
+    const breaches = [
+      { name: 'Example Breach 1', date: '2023-01-15', records: 500000 },
+      { name: 'Example Breach 2', date: '2022-06-20', records: 250000 },
+    ];
+
+    const results = {
+      email,
+      breached: Math.random() > 0.5,
+      breaches: Math.random() > 0.5 ? breaches : [],
+      timestamp: new Date(),
+    };
+
+    // Save to search history
+    db.run(
+      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
+      [req.user.id, 'breach', email, JSON.stringify(results)]
+    );
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Breach check failed' });
+  }
+});
+
+// Phone Number Lookup
+app.post('/api/osint/phone-lookup', authenticateToken, async (req, res) => {
+  const { phoneNumber } = req.body;
+
+  if (!phoneNumber) {
+    return res.status(400).json({ error: 'Phone number is required' });
+  }
+
+  try {
+    const carriers = ['AT&T', 'Verizon', 'T-Mobile', 'Sprint'];
+    const types = ['Mobile', 'Landline', 'VoIP'];
+    const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston'];
+    const timezones = ['Eastern', 'Central', 'Mountain', 'Pacific'];
+
+    const results = {
+      phoneNumber,
+      found: Math.random() > 0.3,
+      carrier: carriers[Math.floor(Math.random() * carriers.length)],
+      type: types[Math.floor(Math.random() * types.length)],
+      country: 'United States',
+      region: 'Example Region',
+      city: cities[Math.floor(Math.random() * cities.length)],
+      timezone: timezones[Math.floor(Math.random() * timezones.length)],
+      registeredTo: 'Private Individual',
+      timestamp: new Date(),
+    };
+
+    db.run(
+      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
+      [req.user.id, 'phone', phoneNumber, JSON.stringify(results)]
+    );
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Phone lookup failed' });
+  }
+});
+
+// Username Variations Search
 app.post('/api/osint/username-variations', authenticateToken, async (req, res) => {
-  const { username } = req.body;
+  const { username, variations } = req.body;
 
   if (!username) {
     return res.status(400).json({ error: 'Username is required' });
   }
 
   try {
-    const variations = generateUsernameVariations(username);
+    // Mock results - in production, check each variation across platforms
+    const foundAccounts = variations
+      .filter(() => Math.random() > 0.7)
+      .slice(0, 5)
+      .map((variation, idx) => ({
+        platform: ['Twitter', 'Instagram', 'GitHub', 'Reddit', 'TikTok'][idx % 5],
+        username: variation,
+        url: `https://example.com/${variation}`
+      }));
+
     const results = {
       originalUsername: username,
       variations: variations,
-      totalVariations: variations.length,
-      timestamp: new Date()
+      foundAccounts: foundAccounts,
+      timestamp: new Date(),
     };
 
     db.run(
@@ -189,99 +323,11 @@ app.post('/api/osint/username-variations', authenticateToken, async (req, res) =
 
     res.json(results);
   } catch (error) {
-    res.status(500).json({ error: 'Variations generation failed' });
+    res.status(500).json({ error: 'Username variations search failed' });
   }
 });
 
-// Domain/IP Lookup - Real API
-app.post('/api/osint/domain-lookup', authenticateToken, async (req, res) => {
-  const { domain } = req.body;
-
-  if (!domain) {
-    return res.status(400).json({ error: 'Domain is required' });
-  }
-
-  try {
-    const results = await lookupDomain(domain);
-
-    db.run(
-      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
-      [req.user.id, 'domain', domain, JSON.stringify(results)]
-    );
-
-    res.json(results);
-  } catch (error) {
-    res.status(500).json({ error: error.message || 'Lookup failed' });
-  }
-});
-
-// IP Lookup - Real API
-app.post('/api/osint/ip-lookup', authenticateToken, async (req, res) => {
-  const { ip } = req.body;
-
-  if (!ip) {
-    return res.status(400).json({ error: 'IP address is required' });
-  }
-
-  try {
-    const results = await lookupIP(ip);
-
-    db.run(
-      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
-      [req.user.id, 'ip', ip, JSON.stringify(results)]
-    );
-
-    res.json(results);
-  } catch (error) {
-    res.status(500).json({ error: error.message || 'IP lookup failed' });
-  }
-});
-
-// Email Breach Check - Real API (Have I Been Pwned)
-app.post('/api/osint/breach-check', authenticateToken, async (req, res) => {
-  const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
-  }
-
-  try {
-    const results = await checkEmailBreach(email);
-
-    db.run(
-      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
-      [req.user.id, 'breach', email, JSON.stringify(results)]
-    );
-
-    res.json(results);
-  } catch (error) {
-    res.status(500).json({ error: error.message || 'Breach check failed' });
-  }
-});
-
-// Phone Number Lookup - Real API
-app.post('/api/osint/phone-lookup', authenticateToken, async (req, res) => {
-  const { phoneNumber } = req.body;
-
-  if (!phoneNumber) {
-    return res.status(400).json({ error: 'Phone number is required' });
-  }
-
-  try {
-    const results = await lookupPhoneNumber(phoneNumber);
-
-    db.run(
-      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
-      [req.user.id, 'phone', phoneNumber, JSON.stringify(results)]
-    );
-
-    res.json(results);
-  } catch (error) {
-    res.status(500).json({ error: error.message || 'Phone lookup failed' });
-  }
-});
-
-// File Search - Real APIs (News, Government, Academic)
+// File Search
 app.post('/api/osint/file-search', authenticateToken, async (req, res) => {
   const { query, searchType } = req.body;
 
@@ -290,7 +336,27 @@ app.post('/api/osint/file-search', authenticateToken, async (req, res) => {
   }
 
   try {
-    const results = await searchFiles(query, searchType);
+    // Mock results - in production, integrate with real search APIs
+    const fileTypes = ['News Article', 'Government Record', 'Legal Document', 'Academic Paper', 'Business Record'];
+    const sources = ['Reuters', 'AP News', 'Government Archive', 'Academic Database', 'Public Records'];
+    
+    const files = Array.from({ length: Math.floor(Math.random() * 8) + 3 }, (_, idx) => ({
+      title: `${query} - Document ${idx + 1}`,
+      type: fileTypes[Math.floor(Math.random() * fileTypes.length)],
+      source: sources[Math.floor(Math.random() * sources.length)],
+      date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+      description: `Information related to ${query}. This is a sample result from the file search.`,
+      relevance: Math.floor(Math.random() * 40) + 60,
+      url: `https://example.com/document/${idx}`
+    }));
+
+    const results = {
+      query,
+      searchType,
+      totalResults: files.length,
+      files: files,
+      timestamp: new Date(),
+    };
 
     db.run(
       'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
@@ -299,22 +365,36 @@ app.post('/api/osint/file-search', authenticateToken, async (req, res) => {
 
     res.json(results);
   } catch (error) {
-    res.status(500).json({ error: error.message || 'File search failed' });
+    res.status(500).json({ error: 'File search failed' });
   }
+});
+
+// Save search to history
+app.post('/api/searches', authenticateToken, (req, res) => {
+  const { searchType, query, results } = req.body;
+
+  if (!searchType || !query) {
+    return res.status(400).json({ error: 'Search type and query are required' });
+  }
+
+  db.run(
+    'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
+    [req.user.id, searchType, query, JSON.stringify(results)],
+    function (err) {
+      if (err) return res.status(500).json({ error: 'Failed to save search' });
+      res.json({ id: this.lastID, success: true });
+    }
+  );
 });
 
 // Get search history
 app.get('/api/searches', authenticateToken, (req, res) => {
   db.all(
-    'SELECT * FROM searches WHERE user_id = ? ORDER BY created_at DESC LIMIT 100',
+    'SELECT * FROM searches WHERE user_id = ? ORDER BY created_at DESC LIMIT 50',
     [req.user.id],
     (err, rows) => {
       if (err) return res.status(500).json({ error: 'Failed to fetch history' });
-      const searches = rows.map(row => ({
-        ...row,
-        results: row.results ? JSON.parse(row.results) : {}
-      }));
-      res.json(searches);
+      res.json(rows);
     }
   );
 });
