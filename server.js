@@ -252,7 +252,7 @@ app.post('/api/osint/breach-check', authenticateToken, async (req, res) => {
 });
 
 // Phone Number Lookup
-app.post('/api/phone-lookup', authenticateToken, async (req, res) => {
+app.post('/api/osint/phone-lookup', authenticateToken, async (req, res) => {
   const { phoneNumber } = req.body;
 
   if (!phoneNumber) {
@@ -289,6 +289,103 @@ app.post('/api/phone-lookup', authenticateToken, async (req, res) => {
   }
 });
 
+// Username Variations Search
+app.post('/api/osint/username-variations', authenticateToken, async (req, res) => {
+  const { username, variations } = req.body;
+
+  if (!username) {
+    return res.status(400).json({ error: 'Username is required' });
+  }
+
+  try {
+    // Mock results - in production, check each variation across platforms
+    const foundAccounts = variations
+      .filter(() => Math.random() > 0.7)
+      .slice(0, 5)
+      .map((variation, idx) => ({
+        platform: ['Twitter', 'Instagram', 'GitHub', 'Reddit', 'TikTok'][idx % 5],
+        username: variation,
+        url: `https://example.com/${variation}`
+      }));
+
+    const results = {
+      originalUsername: username,
+      variations: variations,
+      foundAccounts: foundAccounts,
+      timestamp: new Date(),
+    };
+
+    db.run(
+      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
+      [req.user.id, 'username_variations', username, JSON.stringify(results)]
+    );
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Username variations search failed' });
+  }
+});
+
+// File Search
+app.post('/api/osint/file-search', authenticateToken, async (req, res) => {
+  const { query, searchType } = req.body;
+
+  if (!query) {
+    return res.status(400).json({ error: 'Search query is required' });
+  }
+
+  try {
+    // Mock results - in production, integrate with real search APIs
+    const fileTypes = ['News Article', 'Government Record', 'Legal Document', 'Academic Paper', 'Business Record'];
+    const sources = ['Reuters', 'AP News', 'Government Archive', 'Academic Database', 'Public Records'];
+    
+    const files = Array.from({ length: Math.floor(Math.random() * 8) + 3 }, (_, idx) => ({
+      title: `${query} - Document ${idx + 1}`,
+      type: fileTypes[Math.floor(Math.random() * fileTypes.length)],
+      source: sources[Math.floor(Math.random() * sources.length)],
+      date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+      description: `Information related to ${query}. This is a sample result from the file search.`,
+      relevance: Math.floor(Math.random() * 40) + 60,
+      url: `https://example.com/document/${idx}`
+    }));
+
+    const results = {
+      query,
+      searchType,
+      totalResults: files.length,
+      files: files,
+      timestamp: new Date(),
+    };
+
+    db.run(
+      'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
+      [req.user.id, 'file_search', query, JSON.stringify(results)]
+    );
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'File search failed' });
+  }
+});
+
+// Save search to history
+app.post('/api/searches', authenticateToken, (req, res) => {
+  const { searchType, query, results } = req.body;
+
+  if (!searchType || !query) {
+    return res.status(400).json({ error: 'Search type and query are required' });
+  }
+
+  db.run(
+    'INSERT INTO searches (user_id, search_type, query, results) VALUES (?, ?, ?, ?)',
+    [req.user.id, searchType, query, JSON.stringify(results)],
+    function (err) {
+      if (err) return res.status(500).json({ error: 'Failed to save search' });
+      res.json({ id: this.lastID, success: true });
+    }
+  );
+});
+
 // Get search history
 app.get('/api/searches', authenticateToken, (req, res) => {
   db.all(
@@ -303,7 +400,7 @@ app.get('/api/searches', authenticateToken, (req, res) => {
 
 // Save investigation
 app.post('/api/investigations', authenticateToken, (req, res) => {
-  const { title, description, data } = req.body;
+  const { title, description, notes, data } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'Title is required' });
@@ -311,10 +408,45 @@ app.post('/api/investigations', authenticateToken, (req, res) => {
 
   db.run(
     'INSERT INTO investigations (user_id, title, description, data) VALUES (?, ?, ?, ?)',
-    [req.user.id, title, description, JSON.stringify(data)],
+    [req.user.id, title, description || notes, JSON.stringify(data || {})],
     function (err) {
       if (err) return res.status(500).json({ error: 'Failed to save investigation' });
       res.json({ id: this.lastID, title, description });
+    }
+  );
+});
+
+// Update investigation
+app.put('/api/investigations/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { title, description, notes, data } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+
+  db.run(
+    'UPDATE investigations SET title = ?, description = ?, data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
+    [title, description || notes, JSON.stringify(data || {}), id, req.user.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: 'Failed to update investigation' });
+      if (this.changes === 0) return res.status(404).json({ error: 'Investigation not found' });
+      res.json({ id, title, description, success: true });
+    }
+  );
+});
+
+// Delete investigation
+app.delete('/api/investigations/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+
+  db.run(
+    'DELETE FROM investigations WHERE id = ? AND user_id = ?',
+    [id, req.user.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: 'Failed to delete investigation' });
+      if (this.changes === 0) return res.status(404).json({ error: 'Investigation not found' });
+      res.json({ success: true });
     }
   );
 });
@@ -326,7 +458,12 @@ app.get('/api/investigations', authenticateToken, (req, res) => {
     [req.user.id],
     (err, rows) => {
       if (err) return res.status(500).json({ error: 'Failed to fetch investigations' });
-      res.json(rows);
+      const investigations = rows.map(inv => ({
+        ...inv,
+        data: inv.data ? JSON.parse(inv.data) : {},
+        notes: inv.description
+      }));
+      res.json(investigations);
     }
   );
 });

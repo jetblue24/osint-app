@@ -6,9 +6,11 @@ function Investigations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [selectedCase, setSelectedCase] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    notes: '',
   });
 
   useEffect(() => {
@@ -52,8 +54,14 @@ function Investigations() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/investigations', {
-        method: 'POST',
+      const url = selectedCase 
+        ? `/api/investigations/${selectedCase.id}`
+        : '/api/investigations';
+      
+      const method = selectedCase ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -68,12 +76,53 @@ function Investigations() {
         return;
       }
 
-      setFormData({ title: '', description: '' });
+      setFormData({ title: '', description: '', notes: '' });
       setShowForm(false);
+      setSelectedCase(null);
       fetchInvestigations();
     } catch (err) {
       setError('Network error. Please try again.');
     }
+  };
+
+  const handleOpenCase = (investigation) => {
+    setSelectedCase(investigation);
+    setFormData({
+      title: investigation.title,
+      description: investigation.description || '',
+      notes: investigation.notes || '',
+    });
+    setShowForm(true);
+  };
+
+  const handleDeleteCase = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this case?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/investigations/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        setError('Failed to delete case');
+        return;
+      }
+
+      fetchInvestigations();
+    } catch (err) {
+      setError('Network error. Please try again.');
+    }
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setSelectedCase(null);
+    setFormData({ title: '', description: '', notes: '' });
+    setError('');
   };
 
   if (loading) {
@@ -97,10 +146,10 @@ function Investigations() {
         </button>
       ) : (
         <div className="form-card">
-          <h3>Create New Investigation</h3>
+          <h3>{selectedCase ? 'Edit Investigation' : 'Create New Investigation'}</h3>
           <form onSubmit={handleSubmit}>
             <div className="input-group">
-              <label htmlFor="title">Case Title</label>
+              <label htmlFor="title">Case Title *</label>
               <input
                 id="title"
                 type="text"
@@ -108,6 +157,7 @@ function Investigations() {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="e.g., Social Media Investigation"
+                required
               />
             </div>
 
@@ -118,22 +168,30 @@ function Investigations() {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Add notes about this investigation..."
-                rows="4"
+                placeholder="Add details about this investigation..."
+                rows="3"
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="notes">Investigation Notes</label>
+              <textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                placeholder="Add your findings, observations, and notes here..."
+                rows="6"
               />
             </div>
 
             <div className="form-buttons">
               <button type="submit" className="btn btn-primary">
-                Save Case
+                {selectedCase ? 'Update Case' : 'Save Case'}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setFormData({ title: '', description: '' });
-                  setError('');
-                }}
+                onClick={handleCloseForm}
                 className="btn btn-secondary"
               >
                 Cancel
@@ -152,15 +210,40 @@ function Investigations() {
         <div className="investigations-grid">
           {investigations.map((investigation) => (
             <div key={investigation.id} className="investigation-card">
-              <h3>{investigation.title}</h3>
+              <div className="card-header">
+                <h3>{investigation.title}</h3>
+                <button
+                  className="btn-delete"
+                  onClick={() => handleDeleteCase(investigation.id)}
+                  title="Delete case"
+                >
+                  ✕
+                </button>
+              </div>
+              
               {investigation.description && (
                 <p className="description">{investigation.description}</p>
               )}
+              
+              {investigation.notes && (
+                <div className="notes-preview">
+                  <strong>Notes:</strong>
+                  <p>{investigation.notes.substring(0, 100)}...</p>
+                </div>
+              )}
+              
               <div className="investigation-meta">
                 <span className="date">
                   Created: {new Date(investigation.created_at).toLocaleDateString()}
                 </span>
               </div>
+              
+              <button
+                className="btn btn-open"
+                onClick={() => handleOpenCase(investigation)}
+              >
+                Open & Edit Case
+              </button>
             </div>
           ))}
         </div>

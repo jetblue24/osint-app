@@ -20,28 +20,34 @@ function PhoneLookup({ onSearchComplete }) {
     setResults(null);
 
     try {
-      const response = await fetch('/api/phone-lookup', {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch('/api/osint/phone-lookup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ phoneNumber: phoneNumber.trim() })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to lookup phone number');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to lookup phone number');
       }
 
       const data = await response.json();
       setResults(data);
 
       // Save to history
-      await fetch('/api/search-history', {
+      await fetch('/api/searches', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           searchType: 'phone',
@@ -50,8 +56,9 @@ function PhoneLookup({ onSearchComplete }) {
         })
       });
 
-      onSearchComplete();
+      if (onSearchComplete) onSearchComplete();
     } catch (err) {
+      console.error('Phone lookup error:', err);
       setError(err.message || 'An error occurred during phone lookup');
     } finally {
       setLoading(false);

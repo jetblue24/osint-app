@@ -1,0 +1,208 @@
+.username-variations {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.username-variations h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.description {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.search-form {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
+.input-field:disabled {
+  background-color: #e8e8e8;
+  cursor: not-allowed;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+  width: 100%;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.btn-primary:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border-left: 4px solid #c33;
+}
+
+.results-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.results-container h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.variations-section {
+  margin-bottom: 25px;
+}
+
+.variations-section h4 {
+  color: #2c3e50;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.variations-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.variation-tag {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #90caf9;
+}
+
+.variation-tag.more {
+  background: #f5f5f5;
+  color: #666;
+  border-color: #ddd;
+}
+
+.found-accounts {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #eee;
+}
+
+.found-accounts h4 {
+  color: #2c3e50;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.accounts-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.account-card {
+  background: #f0f7ff;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 12px;
+}
+
+.account-card p {
+  margin: 6px 0;
+  color: #2c3e50;
+}
+
+.account-card a {
+  color: #3498db;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.account-card a:hover {
+  text-decoration: underline;
+}
+
+.info-box {
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  padding: 12px;
+  border-radius: 4px;
+  color: #1565c0;
+  font-size: 13px;
+  margin-top: 15px;
+}
+
+.info-box p {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .username-variations {
+    padding: 15px;
+  }
+
+  .variations-grid {
+    gap: 6px;
+  }
+
+  .accounts-list {
+    grid-template-columns: 1fr;
+  }
+
+  .search-form {
+    padding: 15px;
+  }
+}

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import UsernameSearch from '../components/UsernameSearch';
+import UsernameVariations from '../components/UsernameVariations';
 import DomainLookup from '../components/DomainLookup';
 import BreachChecker from '../components/BreachChecker';
 import PhoneLookup from '../components/PhoneLookup';
+import FileSearch from '../components/FileSearch';
 import SearchHistory from '../components/SearchHistory';
 import Investigations from '../components/Investigations';
 import './Dashboard.css';
@@ -55,6 +57,18 @@ function Dashboard({ user, onLogout }) {
           📱 Phone Lookup
         </button>
         <button
+          className={`tab ${activeTab === 'variations' ? 'active' : ''}`}
+          onClick={() => setActiveTab('variations')}
+        >
+          🔤 Username Variations
+        </button>
+        <button
+          className={`tab ${activeTab === 'files' ? 'active' : ''}`}
+          onClick={() => setActiveTab('files')}
+        >
+          📄 File Search
+        </button>
+        <button
           className={`tab ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
@@ -80,6 +94,12 @@ function Dashboard({ user, onLogout }) {
         )}
         {activeTab === 'phone' && (
           <PhoneLookup onSearchComplete={handleSearchComplete} />
+        )}
+        {activeTab === 'variations' && (
+          <UsernameVariations onSearchComplete={handleSearchComplete} />
+        )}
+        {activeTab === 'files' && (
+          <FileSearch onSearchComplete={handleSearchComplete} />
         )}
         {activeTab === 'history' && <SearchHistory key={refreshKey} />}
         {activeTab === 'investigations' && <Investigations />}
