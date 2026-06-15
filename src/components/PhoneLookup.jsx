@@ -99,7 +99,7 @@ function PhoneLookup({ onSearchComplete }) {
         <div className="results-container">
           <h3>📊 Phone Lookup Results</h3>
           
-          {results.found ? (
+          {results.valid ? (
             <div className="results-grid">
               <div className="result-card">
                 <h4>Phone Number</h4>

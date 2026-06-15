@@ -36,7 +36,13 @@ function UsernameSearch({ onSearchComplete }) {
         return;
       }
 
-      setResults(data);
+      setResults({
+        username: data.username,
+        platforms: data.accounts || [],
+        totalFound: data.totalFound || 0,
+        timestamp: data.timestamp,
+        message: data.message
+      });
       onSearchComplete();
     } catch (err) {
       setError('Network error. Please try again.');

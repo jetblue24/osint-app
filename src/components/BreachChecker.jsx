@@ -37,9 +37,10 @@ function BreachChecker({ onSearchComplete }) {
       }
 
       setResults(data);
-      onSearchComplete();
+      if (onSearchComplete) onSearchComplete();
     } catch (err) {
-      setError('Network error. Please try again.');
+      console.error('Error:', err);
+      setError(err.message || 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }
