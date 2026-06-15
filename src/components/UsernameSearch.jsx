@@ -26,7 +26,7 @@ function UsernameSearch({ onSearchComplete }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username: username.trim() }),
       });
 
       const data = await response.json();
@@ -36,17 +36,15 @@ function UsernameSearch({ onSearchComplete }) {
         return;
       }
 
-      setResults({
-        originalUsername: data.originalUsername,
-        variationResults: data.variationResults || {},
-        totalAccountsFound: data.totalAccountsFound || 0,
-        variationsSearched: data.variationsSearched || 0,
-        allAccounts: data.allAccounts || [],
-        timestamp: data.timestamp,
-        message: data.message
-      });
-      onSearchComplete();
+      // Ensure we have valid data
+      if (!data.originalUsername) {
+        data.originalUsername = username;
+      }
+
+      setResults(data);
+      if (onSearchComplete) onSearchComplete();
     } catch (err) {
+      console.error('Search error:', err);
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -84,13 +82,13 @@ function UsernameSearch({ onSearchComplete }) {
 
       {results && (
         <div className="results-card">
-          <h3>Results for "{results.originalUsername}"</h3>
+          <h3>Results for "{results.originalUsername || username}"</h3>
           <div className="summary-box">
-            <p><strong>Searched {results.variationsSearched} variations</strong></p>
-            <p><strong>Total accounts found: {results.totalAccountsFound}</strong></p>
+            <p><strong>Searched {results.variationsSearched || 0} variations</strong></p>
+            <p><strong>Total accounts found: {results.totalAccountsFound || 0}</strong></p>
           </div>
 
-          {Object.keys(results.variationResults).length > 0 ? (
+          {results.variationResults && Object.keys(results.variationResults).length > 0 ? (
             <div className="variations-section">
               <h4>Accounts by Username Variation:</h4>
               {Object.entries(results.variationResults).map(([variation, data]) => (
@@ -100,7 +98,7 @@ function UsernameSearch({ onSearchComplete }) {
                     <span className="variation-count">{data.count} account(s) found</span>
                   </div>
                   <div className="platforms-grid">
-                    {data.accounts.map((account, index) => (
+                    {data.accounts && data.accounts.map((account, index) => (
                       <div key={index} className="platform-item found">
                         <div className="platform-header">
                           <span className="platform-name">{account.platform}</span>
@@ -117,7 +115,7 @@ function UsernameSearch({ onSearchComplete }) {
             </div>
           ) : (
             <div className="no-results">
-              <p>No accounts found with any variations of "{results.originalUsername}"</p>
+              <p>No accounts found with any variations of "{results.originalUsername || username}"</p>
             </div>
           )}
 
