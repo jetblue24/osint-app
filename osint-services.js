@@ -359,38 +359,63 @@ export async function searchFiles(query, searchType = 'all') {
 // 7. Username Variations Generator
 export function generateUsernameVariations(username) {
   const variations = new Set();
-  variations.add(username);
   
-  // Add common variations
+  // Clean and normalize the input
+  const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
+  
+  // Basic variations
+  variations.add(cleanUsername);
   variations.add(username.toLowerCase());
   variations.add(username.toUpperCase());
-  variations.add(username + '123');
-  variations.add(username + '1');
-  variations.add(username + '_');
-  variations.add(username + '.');
-  variations.add('_' + username);
-  variations.add('.' + username);
+  variations.add(username.trim());
+  
+  // Replace spaces with different separators
+  variations.add(username.replace(/\s+/g, '_').toLowerCase());
+  variations.add(username.replace(/\s+/g, '-').toLowerCase());
+  variations.add(username.replace(/\s+/g, '.').toLowerCase());
+  variations.add(username.replace(/\s+/g, '').toLowerCase());
+  
+  // Add numbers
+  for (let i = 1; i <= 5; i++) {
+    variations.add(cleanUsername + i);
+    variations.add(cleanUsername + '0' + i);
+    variations.add(i + cleanUsername);
+  }
+  
+  // Add common suffixes
+  const suffixes = ['123', '1', '22', '99', 'pro', 'real', 'official', 'x', 'xx'];
+  suffixes.forEach(suffix => {
+    variations.add(cleanUsername + suffix);
+  });
+  
+  // Add separators
+  const separators = ['_', '-', '.', '__'];
+  separators.forEach(sep => {
+    variations.add(sep + cleanUsername);
+    variations.add(cleanUsername + sep);
+    variations.add(cleanUsername + sep + '1');
+  });
   
   // Leetspeak variations
   const leetMap = {
-    'a': '4', 'e': '3', 'i': '1', 'o': '0', 's': '5', 't': '7'
+    'a': '4', 'e': '3', 'i': '1', 'o': '0', 's': '5', 't': '7', 'l': '1'
   };
   
-  let leetVersion = username;
+  let leetVersion = cleanUsername;
   for (const [char, leet] of Object.entries(leetMap)) {
     leetVersion = leetVersion.replace(new RegExp(char, 'gi'), leet);
   }
   variations.add(leetVersion);
   
-  // Number variations
-  for (let i = 1; i <= 3; i++) {
-    variations.add(username + i);
-    variations.add(i + username);
+  // Mixed case variations
+  if (cleanUsername.length > 0) {
+    variations.add(cleanUsername.charAt(0).toUpperCase() + cleanUsername.slice(1));
   }
   
-  // Separator variations
-  variations.add(username.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase());
-  variations.add(username.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase());
+  // Remove empty strings and duplicates
+  const filtered = Array.from(variations).filter(v => v && v.length > 0);
   
-  return Array.from(variations).slice(0, 20);
+  // Return up to 25 variations
+  return filtered.slice(0, 25);
 }
+
