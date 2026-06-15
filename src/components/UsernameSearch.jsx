@@ -37,9 +37,11 @@ function UsernameSearch({ onSearchComplete }) {
       }
 
       setResults({
-        username: data.username,
-        platforms: data.accounts || [],
-        totalFound: data.totalFound || 0,
+        originalUsername: data.originalUsername,
+        variationResults: data.variationResults || {},
+        totalAccountsFound: data.totalAccountsFound || 0,
+        variationsSearched: data.variationsSearched || 0,
+        allAccounts: data.allAccounts || [],
         timestamp: data.timestamp,
         message: data.message
       });
@@ -56,7 +58,7 @@ function UsernameSearch({ onSearchComplete }) {
       <div className="search-card">
         <h2>👤 Find Usernames Across Platforms</h2>
         <p className="description">
-          Enter a username to see if it exists on popular social media platforms and websites.
+          Enter a username to search for all variations across 15+ platforms. We'll automatically check variations like john12doe, Johndoe45, john_doe, etc.
         </p>
 
         {error && <div className="error">{error}</div>}
@@ -69,7 +71,7 @@ function UsernameSearch({ onSearchComplete }) {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g., john_doe"
+              placeholder="e.g., john doe"
               disabled={loading}
             />
           </div>
@@ -82,24 +84,42 @@ function UsernameSearch({ onSearchComplete }) {
 
       {results && (
         <div className="results-card">
-          <h3>Results for "{results.username}"</h3>
-          <div className="platforms-grid">
-            {results.platforms.map((platform, index) => (
-              <div key={index} className={`platform-item ${platform.found ? 'found' : 'not-found'}`}>
-                <div className="platform-header">
-                  <span className="platform-name">{platform.name}</span>
-                  <span className="platform-status">
-                    {platform.found ? '✅ Found' : '❌ Not Found'}
-                  </span>
-                </div>
-                {platform.found && (
-                  <a href={platform.url} target="_blank" rel="noopener noreferrer" className="platform-link">
-                    Visit Profile →
-                  </a>
-                )}
-              </div>
-            ))}
+          <h3>Results for "{results.originalUsername}"</h3>
+          <div className="summary-box">
+            <p><strong>Searched {results.variationsSearched} variations</strong></p>
+            <p><strong>Total accounts found: {results.totalAccountsFound}</strong></p>
           </div>
+
+          {Object.keys(results.variationResults).length > 0 ? (
+            <div className="variations-section">
+              <h4>Accounts by Username Variation:</h4>
+              {Object.entries(results.variationResults).map(([variation, data]) => (
+                <div key={variation} className="variation-group">
+                  <div className="variation-header">
+                    <span className="variation-name">{variation}</span>
+                    <span className="variation-count">{data.count} account(s) found</span>
+                  </div>
+                  <div className="platforms-grid">
+                    {data.accounts.map((account, index) => (
+                      <div key={index} className="platform-item found">
+                        <div className="platform-header">
+                          <span className="platform-name">{account.platform}</span>
+                          <span className="platform-status">✅ Found</span>
+                        </div>
+                        <a href={account.url} target="_blank" rel="noopener noreferrer" className="platform-link">
+                          Visit Profile →
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-results">
+              <p>No accounts found with any variations of "{results.originalUsername}"</p>
+            </div>
+          )}
 
           <div className="results-footer">
             <p className="timestamp">

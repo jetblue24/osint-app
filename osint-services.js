@@ -2,66 +2,93 @@ import axios from 'axios';
 
 // Real OSINT Service Integrations - Using only completely free APIs
 
-// 1. Username Search - Check common platforms
+// 1. Username Search - Check common platforms and variations
 export async function searchUsername(username) {
   try {
     const platforms = [
-      { name: 'Twitter', url: `https://twitter.com/${username}` },
-      { name: 'Instagram', url: `https://instagram.com/${username}` },
-      { name: 'GitHub', url: `https://github.com/${username}` },
-      { name: 'Reddit', url: `https://reddit.com/user/${username}` },
-      { name: 'TikTok', url: `https://tiktok.com/@${username}` },
-      { name: 'YouTube', url: `https://youtube.com/@${username}` },
-      { name: 'Twitch', url: `https://twitch.tv/${username}` },
-      { name: 'LinkedIn', url: `https://linkedin.com/in/${username}` },
-      { name: 'Facebook', url: `https://facebook.com/${username}` },
-      { name: 'Snapchat', url: `https://snapchat.com/add/${username}` },
-      { name: 'Pinterest', url: `https://pinterest.com/${username}` },
-      { name: 'Tumblr', url: `https://tumblr.com/blog/${username}` },
-      { name: 'Medium', url: `https://medium.com/@${username}` },
-      { name: 'Discord', url: `https://discord.com/users/${username}` },
-      { name: 'Patreon', url: `https://patreon.com/${username}` }
+      { name: 'Twitter', url: `https://twitter.com/{username}` },
+      { name: 'Instagram', url: `https://instagram.com/{username}` },
+      { name: 'GitHub', url: `https://github.com/{username}` },
+      { name: 'Reddit', url: `https://reddit.com/user/{username}` },
+      { name: 'TikTok', url: `https://tiktok.com/@{username}` },
+      { name: 'YouTube', url: `https://youtube.com/@{username}` },
+      { name: 'Twitch', url: `https://twitch.tv/{username}` },
+      { name: 'LinkedIn', url: `https://linkedin.com/in/{username}` },
+      { name: 'Facebook', url: `https://facebook.com/{username}` },
+      { name: 'Snapchat', url: `https://snapchat.com/add/{username}` },
+      { name: 'Pinterest', url: `https://pinterest.com/{username}` },
+      { name: 'Tumblr', url: `https://tumblr.com/blog/{username}` },
+      { name: 'Medium', url: `https://medium.com/@{username}` },
+      { name: 'Discord', url: `https://discord.com/users/{username}` },
+      { name: 'Patreon', url: `https://patreon.com/{username}` }
     ];
     
-    const foundAccounts = [];
+    // Generate variations from the input username
+    const variations = generateUsernameVariations(username);
+    const variationResults = {};
+    const allFoundAccounts = [];
     
-    // Check each platform
-    for (const platform of platforms) {
-      try {
-        const response = await axios.head(platform.url, { 
-          timeout: 2000, 
-          validateStatus: () => true,
-          maxRedirects: 0
-        });
-        
-        // If we get a 2xx or 3xx status, the account likely exists
-        if (response.status < 400) {
-          foundAccounts.push({
-            platform: platform.name,
-            username: username,
-            url: platform.url,
-            found: true,
-            status: response.status
+    // Search for each variation
+    for (const variation of variations) {
+      const foundAccounts = [];
+      
+      // Check each platform for this variation
+      for (const platform of platforms) {
+        try {
+          const url = platform.url.replace('{username}', variation);
+          const response = await axios.head(url, { 
+            timeout: 2000, 
+            validateStatus: () => true,
+            maxRedirects: 0
           });
+          
+          // If we get a 2xx or 3xx status, the account likely exists
+          if (response.status < 400) {
+            foundAccounts.push({
+              platform: platform.name,
+              username: variation,
+              url: url,
+              found: true,
+              status: response.status
+            });
+            allFoundAccounts.push({
+              platform: platform.name,
+              username: variation,
+              url: url,
+              found: true
+            });
+          }
+        } catch (error) {
+          // Silently skip errors
         }
-      } catch (error) {
-        // Silently skip errors
+      }
+      
+      // Store results for this variation
+      if (foundAccounts.length > 0) {
+        variationResults[variation] = {
+          count: foundAccounts.length,
+          accounts: foundAccounts
+        };
       }
     }
     
     return {
-      username,
-      totalFound: foundAccounts.length,
-      accounts: foundAccounts,
+      originalUsername: username,
+      variationsSearched: variations.length,
+      variationResults: variationResults,
+      totalAccountsFound: allFoundAccounts.length,
+      allAccounts: allFoundAccounts,
       timestamp: new Date(),
-      message: `Found ${foundAccounts.length} accounts with username "${username}"`
+      message: `Searched ${variations.length} variations. Found ${allFoundAccounts.length} total accounts.`
     };
   } catch (error) {
     console.error('Username search error:', error.message);
     return {
-      username,
-      totalFound: 0,
-      accounts: [],
+      originalUsername: username,
+      variationsSearched: 0,
+      variationResults: {},
+      totalAccountsFound: 0,
+      allAccounts: [],
       timestamp: new Date(),
       error: 'Search failed - please try again'
     };
