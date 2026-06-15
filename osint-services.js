@@ -457,8 +457,9 @@ export async function lookupPhoneNumber(phoneNumber) {
     let areaCode = '';
     let region = 'Unknown';
     
-    // Check for country codes (longest match first)
-    for (let len = 3; len >= 1; len--) {
+    // Check for country codes - prioritize single digit codes first (like '1' for North America)
+    // Then check 2-digit codes, then 3-digit codes
+    for (let len = 1; len <= 3; len++) {
       const potentialCode = cleanNumber.substring(0, len);
       if (countryCodeMap[potentialCode]) {
         countryCode = potentialCode;
