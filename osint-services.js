@@ -2,6 +2,73 @@ import axios from 'axios';
 
 // Real OSINT Service Integrations - Using only completely free APIs
 
+// Helper function to verify if an account actually exists with confidence scoring
+async function verifyAccountExists(platform, username) {
+  try {
+    const platforms = {
+      'Twitter': { url: `https://twitter.com/{username}`, notFoundStatus: 404 },
+      'Instagram': { url: `https://instagram.com/{username}`, notFoundStatus: 404 },
+      'GitHub': { url: `https://github.com/{username}`, notFoundStatus: 404 },
+      'Reddit': { url: `https://reddit.com/user/{username}`, notFoundStatus: 404 },
+      'TikTok': { url: `https://tiktok.com/@{username}`, notFoundStatus: 404 },
+      'YouTube': { url: `https://youtube.com/@{username}`, notFoundStatus: 404 },
+      'Twitch': { url: `https://twitch.tv/{username}`, notFoundStatus: 404 },
+      'LinkedIn': { url: `https://linkedin.com/in/{username}`, notFoundStatus: 404 },
+      'Facebook': { url: `https://facebook.com/{username}`, notFoundStatus: 404 },
+      'Snapchat': { url: `https://snapchat.com/add/{username}`, notFoundStatus: 404 },
+      'Pinterest': { url: `https://pinterest.com/{username}`, notFoundStatus: 404 },
+      'Tumblr': { url: `https://tumblr.com/blog/{username}`, notFoundStatus: 404 },
+      'Medium': { url: `https://medium.com/@{username}`, notFoundStatus: 404 },
+      'Discord': { url: `https://discord.com/users/{username}`, notFoundStatus: 404 },
+      'Patreon': { url: `https://patreon.com/{username}`, notFoundStatus: 404 }
+    };
+
+    if (!platforms[platform]) {
+      return { verified: false, confidence: 0, status: 'unknown' };
+    }
+
+    const platformConfig = platforms[platform];
+    const url = platformConfig.url.replace('{username}', username);
+
+    try {
+      const response = await axios.get(url, {
+        timeout: 3000,
+        validateStatus: () => true,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      // 2xx status = account exists
+      if (response.status >= 200 && response.status < 300) {
+        return { verified: true, confidence: 95, status: response.status };
+      }
+      
+      // 3xx redirects usually mean account exists
+      if (response.status >= 300 && response.status < 400) {
+        return { verified: true, confidence: 85, status: response.status };
+      }
+      
+      // 404 = account doesn't exist
+      if (response.status === 404) {
+        return { verified: false, confidence: 0, status: 404 };
+      }
+
+      // 429 = rate limited (can't verify)
+      if (response.status === 429) {
+        return { verified: null, confidence: 50, status: 'rate_limited' };
+      }
+
+      // Other 4xx/5xx errors
+      return { verified: false, confidence: 20, status: response.status };
+    } catch (error) {
+      return { verified: null, confidence: 30, status: 'error', error: error.message };
+    }
+  } catch (error) {
+    return { verified: false, confidence: 0, status: 'error' };
+  }
+}
+
 // 1. Username Search - Check common platforms and variations
 export async function searchUsername(username) {
   try {
@@ -27,6 +94,7 @@ export async function searchUsername(username) {
     const variations = generateUsernameVariations(username);
     const variationResults = {};
     const allFoundAccounts = [];
+    const verifiedAccounts = [];
     
     // Search for each variation
     for (const variation of variations) {
@@ -42,21 +110,40 @@ export async function searchUsername(username) {
             maxRedirects: 0
           });
           
-          // If we get a 2xx or 3xx status, the account likely exists
+          // If we get a 2xx or 3xx status, verify the account actually exists
           if (response.status < 400) {
+            // Verify the account with a full GET request
+            const verification = await verifyAccountExists(platform.name, variation);
+            
             foundAccounts.push({
               platform: platform.name,
               username: variation,
               url: url,
               found: true,
-              status: response.status
+              status: response.status,
+              verified: verification.verified,
+              confidence: verification.confidence
             });
+            
             allFoundAccounts.push({
               platform: platform.name,
               username: variation,
               url: url,
-              found: true
+              found: true,
+              verified: verification.verified,
+              confidence: verification.confidence
             });
+            
+            // Only add to verified if confidence is high
+            if (verification.verified === true && verification.confidence >= 80) {
+              verifiedAccounts.push({
+                platform: platform.name,
+                username: variation,
+                url: url,
+                verified: true,
+                confidence: verification.confidence
+              });
+            }
           }
         } catch (error) {
           // Silently skip errors
@@ -67,6 +154,7 @@ export async function searchUsername(username) {
       if (foundAccounts.length > 0) {
         variationResults[variation] = {
           count: foundAccounts.length,
+          verifiedCount: foundAccounts.filter(a => a.verified === true).length,
           accounts: foundAccounts
         };
       }
@@ -77,9 +165,11 @@ export async function searchUsername(username) {
       variationsSearched: variations.length,
       variationResults: variationResults,
       totalAccountsFound: allFoundAccounts.length,
+      totalVerifiedAccounts: verifiedAccounts.length,
       allAccounts: allFoundAccounts,
+      verifiedAccounts: verifiedAccounts,
       timestamp: new Date(),
-      message: `Searched ${variations.length} variations. Found ${allFoundAccounts.length} total accounts.`
+      message: `Searched ${variations.length} variations. Found ${allFoundAccounts.length} accounts (${verifiedAccounts.length} verified).`
     };
   } catch (error) {
     console.error('Username search error:', error.message);
@@ -88,7 +178,9 @@ export async function searchUsername(username) {
       variationsSearched: 0,
       variationResults: {},
       totalAccountsFound: 0,
+      totalVerifiedAccounts: 0,
       allAccounts: [],
+      verifiedAccounts: [],
       timestamp: new Date(),
       error: 'Search failed - please try again'
     };
@@ -756,3 +848,7 @@ export function generateUsernameVariations(username) {
   return filtered.slice(0, 25);
 }
 
+// 8. Manual Account Verification - For re-checking account existence
+export async function verifyUsername(platform, username) {
+  return await verifyAccountExists(platform, username);
+}

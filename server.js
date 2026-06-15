@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { searchUsername, checkEmailBreach, lookupPhoneNumber, lookupIP, lookupDomain, searchFiles, generateUsernameVariations } from './osint-services.js';
+import { searchUsername, checkEmailBreach, lookupPhoneNumber, lookupIP, lookupDomain, searchFiles, generateUsernameVariations, verifyUsername } from './osint-services.js';
 
 dotenv.config();
 
@@ -162,6 +162,22 @@ app.post('/api/osint/username-search', authenticateToken, async (req, res) => {
     res.json(results);
   } catch (error) {
     res.status(500).json({ error: error.message || 'Search failed' });
+  }
+});
+
+// Verify Username - Manual re-verification
+app.post('/api/osint/verify-username', authenticateToken, async (req, res) => {
+  const { platform, username } = req.body;
+
+  if (!platform || !username) {
+    return res.status(400).json({ error: 'Platform and username are required' });
+  }
+
+  try {
+    const result = await verifyUsername(platform, username);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Verification failed' });
   }
 });
 
