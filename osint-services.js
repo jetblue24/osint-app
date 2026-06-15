@@ -1,66 +1,51 @@
 import axios from 'axios';
 
-// Real OSINT Service Integrations
+// Real OSINT Service Integrations - Using only completely free APIs
 
-// 1. Username Search using Sherlock API
+// 1. Username Search - Check common platforms
 export async function searchUsername(username) {
   try {
     const platforms = [
-      'twitter', 'instagram', 'github', 'reddit', 'tiktok', 
-      'youtube', 'twitch', 'linkedin', 'facebook', 'snapchat',
-      'pinterest', 'tumblr', 'medium', 'patreon', 'discord'
+      { name: 'Twitter', url: `https://twitter.com/${username}` },
+      { name: 'Instagram', url: `https://instagram.com/${username}` },
+      { name: 'GitHub', url: `https://github.com/${username}` },
+      { name: 'Reddit', url: `https://reddit.com/user/${username}` },
+      { name: 'TikTok', url: `https://tiktok.com/@${username}` },
+      { name: 'YouTube', url: `https://youtube.com/@${username}` },
+      { name: 'Twitch', url: `https://twitch.tv/${username}` },
+      { name: 'LinkedIn', url: `https://linkedin.com/in/${username}` },
+      { name: 'Facebook', url: `https://facebook.com/${username}` },
+      { name: 'Snapchat', url: `https://snapchat.com/add/${username}` },
+      { name: 'Pinterest', url: `https://pinterest.com/${username}` },
+      { name: 'Tumblr', url: `https://tumblr.com/blog/${username}` },
+      { name: 'Medium', url: `https://medium.com/@${username}` },
+      { name: 'Discord', url: `https://discord.com/users/${username}` },
+      { name: 'Patreon', url: `https://patreon.com/${username}` }
     ];
     
     const foundAccounts = [];
     
-    // Check common platforms
+    // Check each platform
     for (const platform of platforms) {
       try {
-        let url;
-        switch(platform) {
-          case 'twitter':
-            url = `https://twitter.com/${username}`;
-            break;
-          case 'instagram':
-            url = `https://instagram.com/${username}`;
-            break;
-          case 'github':
-            url = `https://github.com/${username}`;
-            break;
-          case 'reddit':
-            url = `https://reddit.com/user/${username}`;
-            break;
-          case 'tiktok':
-            url = `https://tiktok.com/@${username}`;
-            break;
-          case 'youtube':
-            url = `https://youtube.com/@${username}`;
-            break;
-          case 'twitch':
-            url = `https://twitch.tv/${username}`;
-            break;
-          case 'linkedin':
-            url = `https://linkedin.com/in/${username}`;
-            break;
-          case 'facebook':
-            url = `https://facebook.com/${username}`;
-            break;
-          default:
-            url = `https://${platform}.com/${username}`;
-        }
+        const response = await axios.head(platform.url, { 
+          timeout: 2000, 
+          validateStatus: () => true,
+          maxRedirects: 0
+        });
         
-        // Try to fetch with timeout
-        const checkResponse = await axios.head(url, { timeout: 3000, validateStatus: () => true });
-        if (checkResponse.status === 200 || checkResponse.status === 301 || checkResponse.status === 302) {
+        // If we get a 2xx or 3xx status, the account likely exists
+        if (response.status < 400) {
           foundAccounts.push({
-            platform: platform.charAt(0).toUpperCase() + platform.slice(1),
+            platform: platform.name,
             username: username,
-            url: url,
-            found: true
+            url: platform.url,
+            found: true,
+            status: response.status
           });
         }
       } catch (error) {
-        // Platform not found or error
+        // Silently skip errors
       }
     }
     
@@ -68,31 +53,42 @@ export async function searchUsername(username) {
       username,
       totalFound: foundAccounts.length,
       accounts: foundAccounts,
-      timestamp: new Date()
+      timestamp: new Date(),
+      message: `Found ${foundAccounts.length} accounts with username "${username}"`
     };
   } catch (error) {
     console.error('Username search error:', error.message);
-    throw new Error('Username search failed');
+    return {
+      username,
+      totalFound: 0,
+      accounts: [],
+      timestamp: new Date(),
+      error: 'Search failed - please try again'
+    };
   }
 }
 
-// 2. Email Breach Check using Have I Been Pwned API
+// 2. Email Breach Check using Have I Been Pwned API (completely free, no key needed)
 export async function checkEmailBreach(email) {
   try {
-    const response = await axios.get(`https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}`, {
-      headers: {
-        'User-Agent': 'OSINT-Nexus-App'
-      },
-      timeout: 5000,
-      validateStatus: (status) => status === 200 || status === 404
-    });
+    const response = await axios.get(
+      `https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}`,
+      {
+        headers: {
+          'User-Agent': 'OSINT-Nexus-App'
+        },
+        timeout: 5000,
+        validateStatus: (status) => status === 200 || status === 404
+      }
+    );
     
     if (response.status === 404) {
       return {
         email,
         breached: false,
+        totalBreaches: 0,
         breaches: [],
-        message: 'Email not found in any known breaches',
+        message: `✅ Good news! "${email}" was not found in any known breaches.`,
         timestamp: new Date()
       };
     }
@@ -105,67 +101,72 @@ export async function checkEmailBreach(email) {
         name: breach.Name,
         title: breach.Title,
         date: breach.BreachDate,
-        dataClasses: breach.DataClasses,
-        description: breach.Description
+        dataClasses: breach.DataClasses ? breach.DataClasses.join(', ') : 'Unknown',
+        description: breach.Description ? breach.Description.substring(0, 200) : 'No description'
       })),
+      message: `⚠️ Warning: This email was found in ${response.data.length} breach(es)`,
       timestamp: new Date()
     };
   } catch (error) {
     console.error('Breach check error:', error.message);
-    throw new Error('Breach check failed');
-  }
-}
-
-// 3. Phone Number Lookup
-export async function lookupPhoneNumber(phoneNumber) {
-  try {
-    // Using NumVerify free API
-    const response = await axios.get('https://api.numverify.com/validate', {
-      params: {
-        number: phoneNumber,
-        access_key: 'free'
-      },
-      timeout: 5000
-    });
-    
-    if (response.data.valid) {
-      return {
-        phoneNumber,
-        valid: true,
-        country: response.data.country_name || 'Unknown',
-        countryCode: response.data.country_code || 'N/A',
-        carrier: response.data.carrier || 'Unknown',
-        lineType: response.data.line_type || 'Unknown',
-        location: response.data.location || 'Unknown',
-        internationalFormat: response.data.international_format || phoneNumber,
-        nationalFormat: response.data.national_format || phoneNumber,
-        timestamp: new Date()
-      };
-    } else {
-      return {
-        phoneNumber,
-        valid: false,
-        message: 'Invalid phone number format',
-        timestamp: new Date()
-      };
-    }
-  } catch (error) {
-    console.error('Phone lookup error:', error.message);
     return {
-      phoneNumber,
-      valid: true,
-      country: 'United States',
-      countryCode: '+1',
-      carrier: 'Unknown',
-      lineType: 'Mobile',
-      location: 'Location data unavailable',
-      internationalFormat: phoneNumber,
+      email,
+      breached: false,
+      totalBreaches: 0,
+      breaches: [],
+      error: 'Breach check failed - service may be temporarily unavailable',
       timestamp: new Date()
     };
   }
 }
 
-// 4. IP Geolocation Lookup
+// 3. Phone Number Lookup - Using free IP geolocation as fallback
+export async function lookupPhoneNumber(phoneNumber) {
+  try {
+    // Clean the phone number
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    
+    // Determine country code from phone number length and format
+    let country = 'Unknown';
+    let carrier = 'Unknown';
+    let lineType = 'Unknown';
+    
+    if (cleanNumber.startsWith('1') && cleanNumber.length === 11) {
+      country = 'United States';
+      lineType = 'Mobile/Landline';
+    } else if (cleanNumber.startsWith('44') && cleanNumber.length === 12) {
+      country = 'United Kingdom';
+      lineType = 'Mobile/Landline';
+    } else if (cleanNumber.startsWith('33') && cleanNumber.length === 11) {
+      country = 'France';
+      lineType = 'Mobile/Landline';
+    } else if (cleanNumber.length >= 10) {
+      country = 'International';
+      lineType = 'Mobile/Landline';
+    }
+    
+    return {
+      phoneNumber,
+      valid: cleanNumber.length >= 10,
+      country: country,
+      carrier: 'Carrier data requires paid API',
+      lineType: lineType,
+      internationalFormat: phoneNumber,
+      message: `Phone number appears to be from ${country}`,
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Phone lookup error:', error.message);
+    return {
+      phoneNumber,
+      valid: false,
+      error: 'Phone lookup failed',
+      timestamp: new Date()
+    };
+  }
+}
+
+// 4. IP Geolocation Lookup - Using completely free API
 export async function lookupIP(ipAddress) {
   try {
     const response = await axios.get(`http://ip-api.com/json/${ipAddress}`, {
@@ -184,95 +185,125 @@ export async function lookupIP(ipAddress) {
         timezone: response.data.timezone,
         isp: response.data.isp,
         org: response.data.org,
-        as: response.data.as,
+        message: `IP is located in ${response.data.city}, ${response.data.country}`,
         timestamp: new Date()
       };
     } else {
-      throw new Error('IP lookup failed');
+      return {
+        ip: ipAddress,
+        error: 'IP lookup failed',
+        timestamp: new Date()
+      };
     }
   } catch (error) {
     console.error('IP lookup error:', error.message);
-    throw new Error('IP lookup failed');
+    return {
+      ip: ipAddress,
+      error: 'IP lookup failed - ' + error.message,
+      timestamp: new Date()
+    };
   }
 }
 
-// 5. Domain Lookup
+// 5. Domain Lookup - Using DNS lookup
 export async function lookupDomain(domain) {
   try {
-    // Fallback: Basic domain info
+    // Try to get DNS records using free API
+    const response = await axios.get(`https://dns.google/resolve?name=${domain}`, {
+      timeout: 5000
+    });
+    
+    const records = response.data.Answer || [];
+    
     return {
       domain,
       found: true,
-      nameservers: ['ns1.example.com', 'ns2.example.com'],
-      registrar: 'Unknown Registrar',
-      created: 'Date unavailable',
-      expires: 'Date unavailable',
-      updated: 'Date unavailable',
+      dnsRecords: records.map(r => ({
+        type: r.type,
+        data: r.data,
+        ttl: r.TTL
+      })),
+      totalRecords: records.length,
+      message: `Found ${records.length} DNS records for ${domain}`,
       timestamp: new Date()
     };
   } catch (error) {
     console.error('Domain lookup error:', error.message);
-    throw new Error('Domain lookup failed');
+    return {
+      domain,
+      found: false,
+      error: 'Domain lookup failed - ' + error.message,
+      timestamp: new Date()
+    };
   }
 }
 
-// 6. File/News Search
+// 6. File/News Search - Using free public search engines
 export async function searchFiles(query, searchType = 'all') {
   try {
     const results = [];
     
-    // Try NewsAPI for news articles
-    if (searchType === 'news' || searchType === 'all') {
-      try {
-        const newsResponse = await axios.get('https://newsapi.org/v2/everything', {
-          params: {
-            q: query,
-            sortBy: 'relevancy',
-            language: 'en',
-            pageSize: 10
-          },
-          timeout: 5000,
-          validateStatus: () => true
-        });
-        
-        if (newsResponse.data.articles) {
-          results.push(...newsResponse.data.articles.map(article => ({
-            title: article.title,
-            type: 'News Article',
-            source: article.source.name,
-            date: article.publishedAt,
-            description: article.description,
-            url: article.url,
-            relevance: 85
-          })));
-        }
-      } catch (error) {
-        console.error('News search error:', error.message);
-      }
-    }
-    
-    // Government Records
-    if (searchType === 'government' || searchType === 'all') {
-      results.push({
-        title: `Government Records Search: ${query}`,
-        type: 'Government Record',
-        source: 'Public Records Database',
-        date: new Date().toISOString(),
-        description: `Search results for ${query} in government databases`,
-        url: `https://www.govinfo.gov/app/search?query=${encodeURIComponent(query)}`,
-        relevance: 75
-      });
-    }
-    
-    // Academic/Legal documents
-    if (searchType === 'all' || searchType === 'academic') {
+    // Google Scholar search (free, no API key needed)
+    if (searchType === 'academic' || searchType === 'all') {
       results.push({
         title: `Academic Search: ${query}`,
         type: 'Academic Paper',
         source: 'Google Scholar',
         date: new Date().toISOString(),
-        description: `Academic publications related to ${query}`,
+        description: `Search academic publications related to "${query}"`,
         url: `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}`,
+        relevance: 90
+      });
+    }
+    
+    // Government records search
+    if (searchType === 'government' || searchType === 'all') {
+      results.push({
+        title: `Government Records: ${query}`,
+        type: 'Government Record',
+        source: 'GovInfo.gov',
+        date: new Date().toISOString(),
+        description: `Search U.S. government documents and records for "${query}"`,
+        url: `https://www.govinfo.gov/app/search?query=${encodeURIComponent(query)}`,
+        relevance: 85
+      });
+    }
+    
+    // News search using DuckDuckGo (free, no API key)
+    if (searchType === 'news' || searchType === 'all') {
+      results.push({
+        title: `News Search: ${query}`,
+        type: 'News Article',
+        source: 'DuckDuckGo News',
+        date: new Date().toISOString(),
+        description: `Search news articles about "${query}"`,
+        url: `https://duckduckgo.com/?q=${encodeURIComponent(query)}&t=h&ia=news`,
+        relevance: 80
+      });
+    }
+    
+    // Wikipedia search
+    if (searchType === 'all' || searchType === 'general') {
+      results.push({
+        title: `Wikipedia: ${query}`,
+        type: 'Encyclopedia',
+        source: 'Wikipedia',
+        date: new Date().toISOString(),
+        description: `Search Wikipedia for information about "${query}"`,
+        url: `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json`,
+        relevance: 75
+      });
+    }
+    
+    // Public records search
+    if (searchType === 'all' || searchType === 'public') {
+      results.push({
+        title: `Public Records: ${query}`,
+        type: 'Public Record',
+        source: 'Public Records Search',
+        date: new Date().toISOString(),
+        description: `Search public records databases for "${query}"`,
+        url: `https://www.google.com/search?q=site:publicrecords.com+${encodeURIComponent(query)}`,
         relevance: 70
       });
     }
@@ -282,11 +313,19 @@ export async function searchFiles(query, searchType = 'all') {
       searchType,
       totalResults: results.length,
       files: results,
+      message: `Found ${results.length} search sources for "${query}"`,
       timestamp: new Date()
     };
   } catch (error) {
     console.error('File search error:', error.message);
-    throw new Error('File search failed');
+    return {
+      query,
+      searchType,
+      totalResults: 0,
+      files: [],
+      error: 'File search failed',
+      timestamp: new Date()
+    };
   }
 }
 
@@ -299,11 +338,11 @@ export function generateUsernameVariations(username) {
   variations.add(username.toLowerCase());
   variations.add(username.toUpperCase());
   variations.add(username + '123');
+  variations.add(username + '1');
   variations.add(username + '_');
   variations.add(username + '.');
   variations.add('_' + username);
   variations.add('.' + username);
-  variations.add(username + username);
   
   // Leetspeak variations
   const leetMap = {
@@ -317,7 +356,7 @@ export function generateUsernameVariations(username) {
   variations.add(leetVersion);
   
   // Number variations
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 3; i++) {
     variations.add(username + i);
     variations.add(i + username);
   }
